@@ -2,7 +2,7 @@
 
 # Compiler and flags
 FC = caf
-FFLAGS =
+FFLAGS = -O3
 
 # Source file and executable
 SRC = tsunami.f90
