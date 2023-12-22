@@ -43,14 +43,8 @@ program tsunami
 
   ! iterating the solution forward in time
   time_loop: do n = 1, num_time_steps
-    ! applies the periodic boundary condition on the left (element on left edge of domain)
-    ! because we're applying periodic (cyclic) boundary conditions, dh(1) depends on the value
-    ! of h from the right edge of the domain
-    dh(1) = h(1) - h(grid_size) 
 
-    do concurrent (i = 2:grid_size)
-      dh(i) = h(i) - h(i-1)     ! calculates the finite difference of h in space
-    end do
+    dh = diff(h) ! calculates the difference in a fn
 
     do concurrent (i = 1:grid_size)
       h(i) = h(i) - c * dh(i) / dx * dt ! evaluates h at the next time step
@@ -58,5 +52,19 @@ program tsunami
 
     print *, n, h
   end do time_loop
+
+contains
+
+  ! applies the periodic boundary condition on the left (element on left edge of domain)
+  ! because we're applying periodic (cyclic) boundary conditions, dh(1) depends on the value
+  ! of h from the right edge of the domain
+  function diff(x) result(dx)
+    real, intent(in) :: x(:)  ! assumed-shape real array as input argument
+    real :: dx(size(x))       ! the result will be a real array of the same size as x
+    integer :: im
+    im = size(x)
+    dx(1) = x(1) - x(im)      ! calculates the boundary value
+    dx(2:im) = x(2:im) - x(1:im-1)  ! calculates the finite diff for all other elements of x
+  end function diff
 
 end program tsunami
