@@ -43,13 +43,9 @@ program tsunami
 
   ! iterating the solution forward in time
   time_loop: do n = 1, num_time_steps
-
-    dh = diff(h) ! calculates the difference in a fn
-
-    do concurrent (i = 1:grid_size)
-      h(i) = h(i) - c * dh(i) / dx * dt ! evaluates h at the next time step
-    end do
-
+    ! we can substitute this one-liner in place of our looping
+    ! because h and diff(h) are of the same shape (1d) and size
+    h = h - c * diff(h) / dx * dt
     print *, n, h
   end do time_loop
 
