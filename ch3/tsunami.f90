@@ -24,22 +24,7 @@ program tsunami
   if (dx <= 0) stop 'grid spacing dx must be > 0'
   if (c <= 0) stop 'background flow speed c must be > 0'
   
-  ! initializing the water height with a Gaussian shape
-  ! icenter and decay control the position and width of the water height perturbation, respectively
-  ! take note, can we do the following assignment in parallel? using `do concurrent`?
-  ! TIP: look for whether any iteration depends on data calculated in any other iteration
-  ! here, the right side depends only on teh loop counter i and params decay and icenter,
-  ! wheras the variable on the left side (h(i)) is not used on the right side
-  
-  ! non parallel version
-  ! do i = 1, grid_size
-  !   h(i) = exp(-decay * (i - icenter)**2) ! ** is power operator
-  ! end do
-
-  ! parallel version
-  do concurrent (i = 1:grid_size) 
-    h(i) = exp(-decay * (i - icenter)**2)
-  end do
+  call set_gaussian(h, icenter, decay)
 
   ! iterating the solution forward in time
   time_loop: do n = 1, num_time_steps
@@ -62,5 +47,20 @@ contains
     dx(1) = x(1) - x(im)      ! calculates the boundary value
     dx(2:im) = x(2:im) - x(1:im-1)  ! calculates the finite diff for all other elements of x
   end function diff
+
+  ! initializing the water height with a Gaussian shape
+  ! icenter and decay control the position and width of the water height perturbation, respectively
+  ! take note, can we do the following assignment in parallel? using `do concurrent`?
+  ! TIP: look for whether any iteration depends on data calculated in any other iteration
+  ! here, the right side depends only on teh loop counter i and params decay and icenter,
+  ! wheras the variable on the left side (h(i)) is not used on the right side
+  subroutine set_gaussian(x, icenter, decay)
+    real, intent(in out) :: x(:) ! 1d array as input/output argument
+    integer, intent(in) :: icenter
+    real, intent(in) :: decay
+    do concurrent(i = 1:size(x))
+      x(i) = exp(-decay * (i - icenter)**2)
+    end do
+  end subroutine set_gaussian
 
 end program tsunami
