@@ -2,10 +2,10 @@ program tsunami
 
   implicit none
 
-  integer :: i, n                             ! array elements (i) and loop iterations (n)
+  integer :: n                                ! loop iterations (n)
+
   integer, parameter :: grid_size = 100       ! array size
   integer, parameter :: num_time_steps = 100  ! num iterations
-
   real, parameter :: dt = 1.                  ! time step [s]
   real, parameter :: dx = 1.                  ! grid spacing [m]
   real, parameter :: c = 1.                   ! phase speed [m/s]
@@ -13,7 +13,6 @@ program tsunami
   ! declares h as a real array with the number of elements equal to grid_size
   ! short-hand for `real, dimension(grid_size) :: h`
   real :: h(grid_size)  ! water height
-  real :: dh(grid_size) ! finite difference in water height
   
   ! central index and decay factor of the water height Gaussian shape
   integer, parameter :: icenter = 25
@@ -24,12 +23,17 @@ program tsunami
   if (dx <= 0) stop 'grid spacing dx must be > 0'
   if (c <= 0) stop 'background flow speed c must be > 0'
   
+  ! initialize the water height
   call set_gaussian(h, icenter, decay)
+
+  print *, 0, h
 
   ! iterating the solution forward in time
   time_loop: do n = 1, num_time_steps
     ! we can substitute this one-liner in place of our looping
     ! because h and diff(h) are of the same shape (1d) and size
+    ! computes the finite difference of water height on the fly
+    ! by calling the diff function
     h = h - c * diff(h) / dx * dt
     print *, n, h
   end do time_loop
@@ -37,9 +41,9 @@ program tsunami
 contains
 
   ! applies the periodic boundary condition on the left (element on left edge of domain)
-  ! because we're applying periodic (cyclic) boundary conditions, dh(1) depends on the value
-  ! of h from the right edge of the domain
-  function diff(x) result(dx)
+  ! because we're applying periodic (cyclic) boundary conditions and then
+  ! computes the finite difference of input array
+  pure function diff(x) result(dx)
     real, intent(in) :: x(:)  ! assumed-shape real array as input argument
     real :: dx(size(x))       ! the result will be a real array of the same size as x
     integer :: im
@@ -54,10 +58,11 @@ contains
   ! TIP: look for whether any iteration depends on data calculated in any other iteration
   ! here, the right side depends only on teh loop counter i and params decay and icenter,
   ! wheras the variable on the left side (h(i)) is not used on the right side
-  subroutine set_gaussian(x, icenter, decay)
+  pure subroutine set_gaussian(x, icenter, decay)
     real, intent(in out) :: x(:) ! 1d array as input/output argument
     integer, intent(in) :: icenter
     real, intent(in) :: decay
+    integer :: i
     do concurrent(i = 1:size(x))
       x(i) = exp(-decay * (i - icenter)**2)
     end do
