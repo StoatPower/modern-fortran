@@ -1,5 +1,7 @@
 program tsunami
 
+  use iso_fortran_env
+
   ! for more functional goodness see https://wavebitscientific.github.io/functional-fortran/
 
   implicit none
@@ -8,17 +10,17 @@ program tsunami
 
   integer, parameter :: grid_size = 100       ! array size
   integer, parameter :: num_time_steps = 100  ! num iterations
-  real, parameter :: dt = 1.                  ! time step [s]
-  real, parameter :: dx = 1.                  ! grid spacing [m]
-  real, parameter :: c = 1.                   ! phase speed [m/s]
+  real(real32), parameter :: dt = 1.                  ! time step [s]
+  real(real32), parameter :: dx = 1.                  ! grid spacing [m]
+  real(real32), parameter :: c = 1.                   ! phase speed [m/s]
 
   ! declares h as a real array with the number of elements equal to grid_size
   ! short-hand for `real, dimension(grid_size) :: h`
-  real :: h(grid_size)  ! water height
+  real(real32) :: h(grid_size)  ! water height
   
   ! central index and decay factor of the water height Gaussian shape
   integer, parameter :: icenter = 25
-  real, parameter :: decay = 0.02
+  real(real32), parameter :: decay = 0.02
 
   if (grid_size <= 0) stop 'grid_size must be > 0'
   if (dt <= 0) stop 'time step dt must be > 0'
@@ -46,8 +48,8 @@ contains
   ! because we're applying periodic (cyclic) boundary conditions and then
   ! computes the finite difference of input array
   pure function diff(x) result(dx)
-    real, intent(in) :: x(:)  ! assumed-shape real array as input argument
-    real :: dx(size(x))       ! the result will be a real array of the same size as x
+    real(real32), intent(in) :: x(:)  ! assumed-shape real array as input argument
+    real(real32) :: dx(size(x))       ! the result will be a real array of the same size as x
     integer :: im
     im = size(x)
     dx(1) = x(1) - x(im)      ! calculates the boundary value
@@ -61,9 +63,9 @@ contains
   ! here, the right side depends only on teh loop counter i and params decay and icenter,
   ! wheras the variable on the left side (h(i)) is not used on the right side
   pure subroutine set_gaussian(x, icenter, decay)
-    real, intent(in out) :: x(:) ! 1d array as input/output argument
+    real(real32), intent(in out) :: x(:) ! 1d array as input/output argument
     integer, intent(in) :: icenter
-    real, intent(in) :: decay
+    real(real32), intent(in) :: decay
     integer :: i
     do concurrent(i = 1:size(x))
       x(i) = exp(-decay * (i - icenter)**2)
