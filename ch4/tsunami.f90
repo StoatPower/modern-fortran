@@ -1,15 +1,16 @@
 program tsunami
 
-  use iso_fortran_env
+  use iso_fortran_env, only: int32, real32
+  use mod_diff, only: diff
 
   ! for more functional goodness see https://wavebitscientific.github.io/functional-fortran/
 
   implicit none
 
-  integer :: n                                ! loop iterations (n)
+  integer(int32) :: n                                ! loop iterations (n)
 
-  integer, parameter :: grid_size = 100       ! array size
-  integer, parameter :: num_time_steps = 100  ! num iterations
+  integer(int32), parameter :: grid_size = 100       ! array size
+  integer(int32), parameter :: num_time_steps = 100  ! num iterations
   real(real32), parameter :: dt = 1.                  ! time step [s]
   real(real32), parameter :: dx = 1.                  ! grid spacing [m]
   real(real32), parameter :: c = 1.                   ! phase speed [m/s]
@@ -19,7 +20,7 @@ program tsunami
   real(real32) :: h(grid_size)  ! water height
   
   ! central index and decay factor of the water height Gaussian shape
-  integer, parameter :: icenter = 25
+  integer(int32), parameter :: icenter = 25
   real(real32), parameter :: decay = 0.02
 
   if (grid_size <= 0) stop 'grid_size must be > 0'
@@ -44,18 +45,6 @@ program tsunami
 
 contains
 
-  ! applies the periodic boundary condition on the left (element on left edge of domain)
-  ! because we're applying periodic (cyclic) boundary conditions and then
-  ! computes the finite difference of input array
-  pure function diff(x) result(dx)
-    real(real32), intent(in) :: x(:)  ! assumed-shape real array as input argument
-    real(real32) :: dx(size(x))       ! the result will be a real array of the same size as x
-    integer :: im
-    im = size(x)
-    dx(1) = x(1) - x(im)      ! calculates the boundary value
-    dx(2:im) = x(2:im) - x(1:im-1)  ! calculates the finite diff for all other elements of x
-  end function diff
-
   ! initializing the water height with a Gaussian shape
   ! icenter and decay control the position and width of the water height perturbation, respectively
   ! take note, can we do the following assignment in parallel? using `do concurrent`?
@@ -64,9 +53,9 @@ contains
   ! wheras the variable on the left side (h(i)) is not used on the right side
   pure subroutine set_gaussian(x, icenter, decay)
     real(real32), intent(in out) :: x(:) ! 1d array as input/output argument
-    integer, intent(in) :: icenter
+    integer(int32), intent(in) :: icenter
     real(real32), intent(in) :: decay
-    integer :: i
+    integer(int32) :: i
     do concurrent(i = 1:size(x))
       x(i) = exp(-decay * (i - icenter)**2)
     end do
