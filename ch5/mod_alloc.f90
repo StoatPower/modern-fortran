@@ -1,22 +1,21 @@
-program mod_alloc
+module mod_alloc
 
    implicit none
 
+   private
+   public :: alloc, free
+
 contains
 
-   subroutine alloc(a, im)
+   subroutine alloc(a, n)
       real, allocatable, intent(in out) :: a(:)
-      integer, intent(in) :: im
+      integer, intent(in) :: n
       integer :: stat
       character(:), allocatable :: errmsg
 
-      if (.not.allocated(a)) then
-         allocate(a(im), stat=stat, errmsg=errmsg)
-         if (stat /= 0) then
-            print *, errmsg
-         end if
-      end if
-
+      if (allocated(a)) call free(a)
+      allocate(a(n), stat=stat, errmsg=errmsg)
+      if (stat /= 0) error stop errmsg
    end subroutine alloc
 
    subroutine free(a)
@@ -24,12 +23,9 @@ contains
       integer :: stat
       character(:), allocatable :: errmsg
 
-      if (allocated(a)) then
-         deallocate(a, stat=stat, errmsg=errmsg)
-         if (stat /= 0) then
-            print *, errmsg
-         end if
-      end if
+      if (.not. allocated(a)) return
+      deallocate(a, stat=stat, errmsg=errmsg)
+      if (stat /= 0) error stop errmsg
    end subroutine free
 
-end program mod_alloc
+end module mod_alloc
