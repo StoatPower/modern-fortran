@@ -1,7 +1,8 @@
 program stock_gain
   
   ! use mod_arrays, only: reverse
-  ! use mod_io, only: read_stock
+  use mod_io, only: num_records
+  use mod_alloc, only: alloc, free
   
   implicit none
 
@@ -47,8 +48,35 @@ contains
     character(:), allocatable, intent(in out) :: timestamps(:) ! dynamic array of char strings of len 10
     real, allocatable, intent(in out) :: open(:), &       ! dynamic real arrays for stock data
       high(:), low(:), close(:), adjclose(:), volume(:)
-  
+    integer :: fileunit, n, nm
 
+    ! finds the number of records (lines) in a file
+    nm = num_records(filename) - 1
+
+    ! allocate timestamps
+    if (allocated(timestamps)) deallocate(timestamps)
+    allocate(character(10) :: timestamps(nm))
+
+    ! allocate stock price data
+    call alloc(open, nm)
+    call alloc(high, nm)
+    call alloc(low, nm)
+    call alloc(close, nm)
+    call alloc(adjclose, nm)
+    call alloc(volume, nm)
+
+    ! opens the CSV file
+    open(newunit=fileunit, file=filename)
+    read(fileunit, fmt=*, end=1) ! skips the data header in first line
+    do n = 1, nm
+      ! reads the data line-by-line and stores into arrays
+      read(fileunit, fmt=*, end=1) timestamps(n), open(n), &
+        high(n), low(n), close(n), adjclose(n), volume(n)
+    end do
+    ! the 1 is a line label that Fortran uses if and when 
+    ! it encounters an exception in the read(fileunit, fmt=*, end=1) 
+    ! statements
+    1 close(fileunit)
   end subroutine read_stock
   
 end program stock_gain
