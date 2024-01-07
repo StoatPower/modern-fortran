@@ -15,10 +15,13 @@ stock_gain: stock_gain.f90 $(OBJS)
 stock_volatility: stock_volatility.f90 $(OBJS)
 	$(FC) $< $(OBJS) -o $@
 
+stock_crossover: stock_crossover.f90 $(OBJS)
+	$(FC) $< $(OBJS) -o $@
+
 # modules
 mod_alloc.o: mod_alloc.f90
 mod_arrays.o: mod_arrays.f90
 mod_io.o: mod_io.f90 mod_alloc.o
 
 clean:
-	$(RM) *_volatility.txt *.o *.mod stock_gain stock_volatility
+	$(RM) *_volatility.txt *_crossover.txt *.o *.mod stock_gain stock_volatility stock_crossover
